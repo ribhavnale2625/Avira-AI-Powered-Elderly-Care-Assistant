@@ -1,0 +1,31 @@
+# AVIRA Phase 1 — Python Backend Requirements
+
+# Core API Server
+flask>=3.0.0
+flask-cors>=4.0.0
+
+# Speech Recognition
+SpeechRecognition>=3.10.0
+PyAudio>=0.2.13
+
+# Text-to-Speech
+pyttsx3>=2.90
+gTTS>=2.5.0
+pygame>=2.5.0
+
+# Emotion Detection (Text)
+librosa>=0.10.0
+numpy>=1.24.0
+
+# Face Emotion Detection (CNN/Webcam)
+fer>=22.5.0
+opencv-python-headless>=4.8.0
+tensorflow>=2.13.0
+
+# Utilities
+requests>=2.31.0
+python-dotenv>=1.0.0
+
+# NLP and Offline STT
+groq>=0.4.0
+vosk>=0.3.32

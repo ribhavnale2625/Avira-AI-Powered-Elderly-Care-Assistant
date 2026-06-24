@@ -1,0 +1,72 @@
+# ─── SECURITY — NEVER COMMIT THESE ─────────────────────────────────────────
+.env
+*.env
+!.env.example
+
+# ─── Python ──────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+ENV/
+env/
+pip-wheel-metadata/
+.mypy_cache/
+.dmypy.json
+.pyre/
+.pytype/
+
+# ─── Node / Frontend ─────────────────────────────────────────────────────────
+node_modules/
+frontend/dist/
+frontend/.next/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ─── ML Model Artifacts (large files — use Git LFS or store externally) ──────
+# Uncomment lines below if you do NOT want to push binary model files:
+# model(1)/emotion_model.h5
+# model(1)/emotion_scaler.pkl
+# model(1)/label_encoder.pkl
+# backend/models/vosk-model-*/
+
+# ─── Runtime / Logs ──────────────────────────────────────────────────────────
+backend/logs/assistant.log
+backend/logs/server.log
+backend/logs/simulated_sms.log
+backend/logs/emergency_alerts.json
+backend/logs/device_states.json
+*.log
+
+# ─── IDE / OS ────────────────────────────────────────────────────────────────
+.vscode/settings.json
+.vscode/*.code-workspace
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── Misc ────────────────────────────────────────────────────────────────────
+scratch/
+{modules,logs}/
+*.mp4
+*.pdf
+*.zip
+
+# Personal / unrelated files — not for GitHub
+_personal/
+*.safetensors 

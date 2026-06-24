@@ -1,0 +1,1829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#07090e">
+<link rel="manifest" href="/caregiver/manifest.json">
+<title>AVIRA Caregiver Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Rounded" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root {
+  --bg: #07090e;
+  --surface: rgba(18, 22, 33, 0.55);
+  --surface-solid: #0d0f14;
+  --surface-high: rgba(28, 33, 48, 0.8);
+  --glass: rgba(18, 22, 33, 0.45);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --text: #f3f4f6;
+  --text2: rgba(243, 244, 246, 0.7);
+  --text3: rgba(243, 244, 246, 0.45);
+  
+  --radius-lg: 24px;
+  --radius-md: 16px;
+  --radius-sm: 12px;
+  
+  --safe-top: env(safe-area-inset-top, 24px);
+  --safe-bottom: env(safe-area-inset-bottom, 12px);
+  
+  /* Brand accents (Default/Neutral state) */
+  --accent: #4f46e5;
+  --accent-glow: rgba(79, 70, 229, 0.2);
+  --blue: #3b82f6;
+  --green: #10b981;
+  --red: #ef4444;
+  --orange: #ea580c;
+  --purple: #8b5cf6;
+  --pink: #ec4899;
+  --teal: #06b6d4;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { 
+  font-family: 'Plus Jakarta Sans', sans-serif; 
+  background: #050609; 
+  color: var(--text); 
+  -webkit-font-smoothing: antialiased; 
+  height: 100%; 
+  overflow: hidden; 
+}
+
+h1, h2, h3, .stat-val, .mock-time { font-family: 'Space Grotesk', sans-serif; }
+.material-symbols-rounded { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+
+/* ── LAYOUT ── */
+.app-container {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Left Info Panel (Desktop Only) */
+.desktop-panel {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 48px;
+  width: 400px;
+  flex-shrink: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  background: linear-gradient(135deg, #0a0c10 0%, #050608 100%);
+  position: relative;
+  z-index: 10;
+}
+.brand-group h1 {
+  font-size: 28px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #93c5fd, #c084fc);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+.brand-group p {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 4px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.system-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  margin-top: 40px;
+}
+.system-card h4 {
+  font-size: 12px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+.sys-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 8px;
+  color: var(--text2);
+}
+.sys-row:last-child { margin-bottom: 0; }
+.sys-val { color: var(--text); font-weight: 600; }
+
+.desktop-footer {
+  font-size: 12px;
+  color: var(--text3);
+}
+.desktop-footer .caregiver-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+/* App Simulator Frame (Right Side / Center) */
+.simulator-area {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(135deg, #0a0d14 0%, #050608 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Main Content Frame */
+.app-frame {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  background: var(--bg);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 5;
+  transition: box-shadow 0.6s ease, border-color 0.6s ease;
+}
+
+/* Desktop sidebar shown at 1024px+ */
+@media (min-width: 1024px) {
+  .desktop-panel { display: flex; }
+}
+
+/* Tablet: no phone bezel, full width */
+@media (min-width: 768px) {
+  .app-frame {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+  }
+  .app-frame::before { display: none; }
+}
+
+/* Mobile: full-screen responsive layout */
+@media (max-width: 767px) {
+  :root {
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .mock-status-bar {
+    display: none !important;
+  }
+  .app-frame, .content-scroll {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  /* Topbar stays fixed, smaller text */
+  .topbar {
+    padding: 12px 16px !important;
+  }
+  /* Hide verbose badge - show icon only */
+  .system-badge {
+    display: none;
+  }
+  /* Compact topbar spacing */
+  .topbar-right { gap: 8px; }
+  /* Stats grid: slightly less padding */
+  .stat-val { font-size: 20px; }
+  .stat-label { font-size: 8px; letter-spacing: 0.3px; }
+  .stat-card { padding: 12px 6px; }
+  /* Device text truncation */
+  .device-room, .device-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .device-info { min-width: 0; overflow: hidden; }
+  /* Bottom nav tighter for 5 tabs */
+  .mob-btn { padding: 6px 2px; font-size: 9px; }
+}
+
+/* ── PHONE STATUS BAR (hidden on real devices, purely decorative on desktop) ── */
+.mock-status-bar {
+  height: var(--safe-top);
+  padding: 0 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 500;
+  background: linear-gradient(to bottom, rgba(7, 9, 14, 0.8) 0%, rgba(7, 9, 14, 0) 100%);
+  pointer-events: none;
+}
+.mock-icons {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.mock-icons .material-symbols-rounded {
+  font-size: 14px;
+}
+
+/* ── HEADER / TOPBAR ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 28px;
+  padding-top: calc(var(--safe-top) + 16px);
+  position: relative;
+  z-index: 10;
+  background: rgba(7, 9, 14, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+.topbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; overflow: hidden; }
+.topbar-left span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.live-dot { 
+  width: 8px; 
+  height: 8px; 
+  border-radius: 50%; 
+  background: var(--green); 
+  box-shadow: 0 0 12px var(--green); 
+  animation: pulseGreen 2s infinite; 
+}
+@keyframes pulseGreen {
+  0%,100%{opacity:1;box-shadow:0 0 12px var(--green)}
+  50%{opacity:.4;box-shadow:0 0 4px var(--green)}
+}
+@keyframes pulseRed {
+  0%,100%{opacity:1;box-shadow:0 0 12px var(--red)}
+  50%{opacity:.4;box-shadow:0 0 4px var(--red)}
+}
+
+.topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.system-badge { 
+  padding: 4px 10px; 
+  border-radius: 20px; 
+  background: rgba(16,185,129,0.1); 
+  color: var(--green); 
+  font-size: 9px; 
+  font-weight: 700; 
+  letter-spacing: 0.8px; 
+}
+
+/* ── SCROLL CONTENT ── */
+.content-scroll { 
+  flex: 1; 
+  min-height: 0;
+  overflow-y: auto; 
+  overflow-x: hidden; 
+  position: relative; 
+  z-index: 1; 
+  padding: 28px 32px;
+  /* pad bottom so content isn't hidden under fixed nav */
+  padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+}
+/* On mobile: tighter padding */
+@media (max-width: 767px) {
+  .content-scroll {
+    padding: 16px;
+    padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+  }
+}
+/* On large screens: more generous padding */
+@media (min-width: 1024px) {
+  .content-scroll {
+    padding: 32px 48px;
+    padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+  }
+}
+.content-scroll::-webkit-scrollbar { width: 4px; }
+.content-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+/* ── PANELS/WIDGETS ── */
+.view-transition-wrapper {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card {
+  background: var(--surface);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.card-title { 
+  font-size: 11px; 
+  font-weight: 700; 
+  text-transform: uppercase; 
+  letter-spacing: 1px; 
+  color: var(--text3); 
+  margin-bottom: 16px; 
+  font-family: 'Outfit', sans-serif; 
+}
+
+/* Emotion telemetry glowing aura backgrounds */
+.aurora { 
+  position: absolute; 
+  pointer-events: none; 
+  mix-blend-mode: screen; 
+  filter: blur(100px); 
+  opacity: 0.25; 
+  z-index: 0; 
+  border-radius: 50%; 
+  transition: background 0.8s ease;
+}
+.aurora-1 { top: -60px; right: 10%; width: 300px; height: 300px; background: rgba(59, 130, 246, 0.2); }
+.aurora-2 { bottom: -60px; left: 10%; width: 350px; height: 350px; background: rgba(139, 92, 246, 0.15); }
+
+/* Dashboard Header */
+.dashboard-hero-card {
+  position: relative;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 16px;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05), 0 8px 32px rgba(0,0,0,0.3);
+}
+.hero-bg-glow {
+  position: absolute;
+  top: -100px;
+  right: -50px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.25;
+  transition: background 0.8s ease;
+  pointer-events: none;
+}
+.hero-profile-area {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  position: relative;
+  z-index: 1;
+}
+.profile-avatar-glow {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: #0f121a;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  transition: border-color 0.8s ease;
+}
+.profile-avatar-initials {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+}
+.dynamic-emoji-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #151821;
+  border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+.profile-details h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.last-active {
+  font-size: 11px;
+  color: var(--text3);
+  margin-bottom: 8px;
+}
+.emotion-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: capitalize;
+  letter-spacing: 0.5px;
+}
+.pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: pulseDot 2s infinite;
+}
+@keyframes pulseDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.4; }
+}
+
+/* ── STATS ROW ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+@media (min-width: 768px) {
+  .stats-row {
+    gap: 20px;
+  }
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 20px 16px;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+}
+.stat-card:active {
+  transform: scale(0.96);
+}
+.stat-val {
+  font-size: 28px;
+  font-weight: 700;
+}
+.stat-label {
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-top: 6px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── TELEMETRY CHART ── */
+.chart-wrap { height: 220px; width: 100%; position: relative; }
+@media (min-width: 768px) {
+  .chart-wrap { height: 260px; }
+}
+.chart-legend {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text2);
+}
+.chart-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── DEVICES GRID ── */
+.device-grid { 
+  display: grid; 
+  grid-template-columns: repeat(2, 1fr); 
+  gap: 12px; 
+}
+@media (min-width: 768px) {
+  .device-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+}
+@media (min-width: 1200px) {
+  .device-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.device-card {
+  display: flex;
+  align-items: center;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+.device-card:active {
+  transform: scale(0.96);
+}
+.device-card.on {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+.device-icon-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  color: var(--text3);
+  transition: all 0.2s;
+}
+.device-card.on .device-icon-wrap {
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--green);
+}
+.device-info { flex: 1; overflow: hidden; min-width: 0; }
+.device-name { font-size: 13px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.device-room { font-size: 10px; color: var(--text3); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Custom toggle switch */
+.device-switch {
+  width: 34px;
+  height: 18px;
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.1);
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.device-card.on .device-switch {
+  background: var(--green);
+}
+.switch-handle {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.device-card.on .switch-handle {
+  transform: translateX(16px);
+}
+
+/* ── LIVE CHAT COMPONENT ── */
+.chat-widget-card {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.chat-widget-card:hover {
+  background: var(--surface-high);
+}
+.card-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.card-header-row .card-title { margin-bottom: 0; }
+.text-link { color: var(--accent); font-size: 20px; }
+
+.chat-feed { 
+  max-height: 300px; 
+  overflow-y: auto; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 10px; 
+}
+.chat-feed::-webkit-scrollbar { width: 2px; }
+
+.msg { 
+  padding: 12px 14px; 
+  border-radius: 18px; 
+  max-width: 85%; 
+  font-size: 13px; 
+  line-height: 1.5; 
+  position: relative;
+  animation: fadeUp 0.3s ease; 
+}
+.msg.user { 
+  background: rgba(59, 130, 246, 0.12); 
+  border: 1px solid rgba(59, 130, 246, 0.18); 
+  align-self: flex-end; 
+  border-bottom-right-radius: 4px; 
+  color: #93c5fd; 
+}
+.msg.assistant { 
+  background: var(--surface-solid); 
+  border: 1px solid var(--glass-border);
+  align-self: flex-start; 
+  border-bottom-left-radius: 4px; 
+  color: var(--text);
+}
+.msg.caregiver { 
+  background: rgba(16, 185, 129, 0.12); 
+  border: 1px solid rgba(16, 185, 129, 0.18); 
+  align-self: flex-start; 
+  border-bottom-left-radius: 4px; 
+  color: #a7f3d0; 
+}
+.msg.reminder { 
+  background: rgba(245, 158, 11, 0.12); 
+  border: 1px solid rgba(245, 158, 11, 0.18); 
+  align-self: flex-start; 
+  border-bottom-left-radius: 4px; 
+  color: #fde68a; 
+}
+.msg-role { font-size: 9px; font-weight: 800; opacity: 0.5; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.msg-time { font-size: 9px; color: var(--text3); margin-top: 6px; text-align: right; }
+.msg-emotion { 
+  display: inline-block; 
+  font-size: 9px; 
+  padding: 2px 8px; 
+  border-radius: 100px; 
+  margin-top: 6px; 
+  font-weight: 700; 
+  text-transform: uppercase;
+}
+
+/* ── INPUTS & CONTROLS ── */
+.input-group {
+  margin-bottom: 16px;
+}
+.input-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 8px;
+  display: block;
+}
+.input-wrap { 
+  display: flex; 
+  gap: 10px; 
+  margin-bottom: 12px; 
+}
+.input-wrap input, .input-wrap select, .input-wrap textarea {
+  flex: 1; 
+  background: rgba(0, 0, 0, 0.25); 
+  border: 1px solid var(--glass-border);
+  border-radius: 14px; 
+  padding: 14px 16px; 
+  color: var(--text); 
+  font-size: 14px;
+  font-family: inherit; 
+  outline: none; 
+  transition: all 0.2s; 
+  resize: none;
+}
+.input-wrap input:focus, .input-wrap select:focus, .input-wrap textarea:focus { 
+  border-color: var(--accent); 
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); 
+}
+.input-wrap select { 
+  cursor: pointer;
+}
+
+.btn {
+  padding: 14px 20px; 
+  border-radius: 14px; 
+  border: none; 
+  font-size: 14px;
+  font-weight: 700; 
+  cursor: pointer; 
+  font-family: 'Space Grotesk', sans-serif;
+  transition: all 0.2s; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  gap: 8px;
+}
+.btn-primary { 
+  background: linear-gradient(135deg, var(--blue), var(--purple)); 
+  color: #fff; 
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.25); 
+}
+.btn-primary:active { transform: scale(0.97); }
+.btn-danger { background: linear-gradient(135deg, var(--red), var(--pink)); color: #fff; }
+.btn-sm { padding: 8px 12px; font-size: 12px; border-radius: 10px; font-family: 'Plus Jakarta Sans', sans-serif; }
+
+/* Quick Broadcast Buttons */
+.quick-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.quick-pill {
+  padding: 10px 14px; 
+  border-radius: 20px; 
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.02); 
+  color: var(--text2); 
+  font-size: 12px;
+  font-weight: 500; 
+  cursor: pointer; 
+  transition: all 0.2s; 
+  font-family: inherit;
+}
+.quick-pill:active { 
+  background: rgba(59, 130, 246, 0.1); 
+  border-color: rgba(59, 130, 246, 0.2); 
+  color: var(--blue); 
+  transform: scale(0.95); 
+}
+
+/* ── REMINDER LIST ── */
+.rem-item {
+  display: flex; 
+  align-items: center; 
+  gap: 14px; 
+  padding: 14px 16px;
+  border-radius: 14px; 
+  background: rgba(255, 255, 255, 0.02); 
+  border: 1px solid var(--glass-border);
+  margin-bottom: 10px;
+}
+.rem-time { 
+  font-size: 20px; 
+  font-weight: 700; 
+  color: var(--accent); 
+  min-width: 55px; 
+  font-family: 'Space Grotesk', sans-serif; 
+}
+.rem-info { flex: 1; overflow: hidden; }
+.rem-text { font-size: 13.5px; font-weight: 500; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+.rem-repeat { 
+  font-size: 9px; 
+  color: var(--text3); 
+  margin-top: 3px; 
+  display: inline-block; 
+  padding: 2px 6px; 
+  background: rgba(255,255,255,0.04); 
+  border-radius: 4px; 
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.rem-del { 
+  background: rgba(239, 68, 68, 0.1); 
+  border: 1px solid rgba(239, 68, 68, 0.15); 
+  color: var(--red); 
+  font-size: 12px; 
+  font-weight: 800;
+  cursor: pointer; 
+  width: 32px;
+  height: 32px;
+  border-radius: 10px; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s; 
+}
+.rem-del:active { background: var(--red); color: #fff; transform: scale(0.9); }
+
+/* ── PROGRESS BARS ── */
+.progress-row {
+  margin-bottom: 14px;
+}
+.progress-row:last-child { margin-bottom: 0; }
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+.progress-bar { 
+  height: 6px; 
+  background: rgba(255,255,255,0.04); 
+  border-radius: 10px; 
+  overflow: hidden; 
+}
+.progress-bar-fill { 
+  height: 100%; 
+  border-radius: 10px; 
+  transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1); 
+}
+
+/* ── SOS BANNER ── */
+.sos-banner {
+  background: linear-gradient(135deg, var(--red), var(--pink));
+  color: #fff; 
+  padding: 12px 16px; 
+  display: none;
+  align-items: center; 
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
+  animation: sosPulse 1.5s infinite;
+  box-shadow: 0 8px 24px rgba(239,68,68,0.25);
+  position: relative;
+  z-index: 100;
+}
+.sos-banner.active { display: flex; }
+@keyframes sosPulse { 
+  0%,100%{background: linear-gradient(135deg, #ef4444, #ec4899);}
+  50%{background: linear-gradient(135deg, #dc2626, #db2777);}
+}
+
+/* ── EMPTY STATE ── */
+.empty { text-align: center; padding: 40px 16px; color: var(--text3); }
+.empty-icon { font-size: 40px; margin-bottom: 8px; opacity: 0.35; }
+.empty-text { font-size: 13px; font-weight: 500; }
+
+/* ── TOAST ── */
+.toast { 
+  position: fixed; 
+  bottom: calc(75px + var(--safe-bottom)); 
+  left: 50%; 
+  transform: translateX(-50%) translateY(40px); 
+  background: rgba(18, 22, 33, 0.95); 
+  border: 1px solid var(--glass-border); 
+  backdrop-filter: blur(24px); 
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 16px; 
+  padding: 12px 20px; 
+  font-size: 13px; 
+  font-weight: 600; 
+  z-index: 800; 
+  opacity: 0; 
+  transition: all 0.3s cubic-bezier(.34,1.56,.64,1); 
+  pointer-events: none; 
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  width: max-content;
+  max-width: 85%;
+  text-align: center;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── BOTTOM TAB BAR ── */
+.mobile-nav {
+  display: flex; 
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px; 
+  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  background: rgba(8, 10, 16, 0.95); 
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border-top: 1px solid rgba(255,255,255,0.07);
+  z-index: 9999;
+  /* FIXED to viewport — works on all mobile browsers */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(58px + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 768px) {
+  .mobile-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 10px 32px;
+    height: 56px;
+  }
+}
+.mob-btn {
+  background: none; 
+  border: none; 
+  color: var(--text3);
+  font-size: 10px; 
+  font-weight: 600; 
+  display: flex;
+  flex-direction: column; 
+  align-items: center; 
+  gap: 4px;
+  cursor: pointer; 
+  padding: 6px 14px; 
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  font-family: inherit; 
+  position: relative;
+  flex: 1;
+  max-width: 90px;
+}
+@media (min-width: 768px) {
+  .mob-btn {
+    flex-direction: row;
+    gap: 8px;
+    font-size: 12px;
+    padding: 8px 16px;
+    flex: 0 0 auto;
+    max-width: none;
+  }
+}
+.mob-btn:hover {
+  background: rgba(255,255,255,0.04);
+  color: var(--text2);
+}
+.mob-btn.active { 
+  color: var(--accent);
+  background: rgba(79, 70, 229, 0.12);
+}
+.mob-btn .material-symbols-rounded { 
+  font-size: 20px; 
+  transition: transform 0.2s ease; 
+}
+@media (min-width: 768px) {
+  .mob-btn .material-symbols-rounded { font-size: 18px; }
+}
+.mob-btn.active .material-symbols-rounded { transform: scale(1.1); }
+.mob-btn .badge { 
+  position: absolute; 
+  top: 4px; 
+  right: 12px; 
+  width: 14px; 
+  height: 14px; 
+  background: var(--red); 
+  border-radius: 50%; 
+  font-size: 8px; 
+  font-weight: 800; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  color: #fff; 
+  box-shadow: 0 0 6px var(--red); 
+}
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  <!-- ── DESKTOP BRAND PANEL ── -->
+  <aside class="desktop-panel">
+    <div class="brand-group">
+      <h1>AVIRA Care</h1>
+      <p>Remote Telemetry Dashboard</p>
+      
+      <div class="system-card">
+        <h4>Telemetry Node</h4>
+        <div class="sys-row">
+          <span>Client Device:</span>
+          <span class="sys-val" id="clientName">Ribhav</span>
+        </div>
+        <div class="sys-row">
+          <span>Classifier:</span>
+          <span class="sys-val">DistilBERT 6-Class</span>
+        </div>
+        <div class="sys-row">
+          <span>ESP32 Sync:</span>
+          <span class="sys-val" id="espStatus">Active</span>
+        </div>
+        <div class="sys-row">
+          <span>Status:</span>
+          <span class="sys-val" style="color: var(--green);" id="sysStateLabel">ONLINE</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="desktop-footer">
+      <div class="caregiver-name">Sarah Jenkins</div>
+      <p data-i18n="primaryCaregiver">Primary Caregiver</p>
+    </div>
+  </aside>
+
+  <!-- ── SIMULATOR CONTAINER ── -->
+  <div class="simulator-area">
+    <div class="app-frame" id="deviceFrame">
+      <div class="aurora aurora-1"></div>
+      <div class="aurora aurora-2"></div>
+
+      <!-- Smartphone Top Notch Mock Status Bar -->
+      <div class="mock-status-bar">
+        <span class="mock-time" id="mockTime">09:41</span>
+        <div class="mock-icons">
+          <span class="material-symbols-rounded">signal_cellular_alt</span>
+          <span class="material-symbols-rounded">wifi</span>
+          <span class="material-symbols-rounded">battery_full</span>
+        </div>
+      </div>
+
+      <!-- Main Navigation Header -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="live-dot" id="connDot"></div>
+          <span style="font-weight:700;font-size:15px;letter-spacing:-0.2px;" id="userName">Ribhav's Home</span>
+        </div>
+        <div class="topbar-right">
+          <select id="langSelect" onchange="changeLang(this.value)" style="background: rgba(255,255,255,0.04); color: var(--text); border: 1px solid var(--glass-border); border-radius: 10px; padding: 4px 8px; font-family: inherit; font-size: 11px; font-weight: 700; cursor: pointer; outline: none;">
+            <option value="en">EN</option>
+            <option value="hi">HI</option>
+            <option value="mr">MR</option>
+          </select>
+          <span class="system-badge" id="connLabel">SYSTEM LIVE</span>
+        </div>
+      </header>
+
+      <!-- Active SOS Alert Banner -->
+      <div id="sosBanner" class="sos-banner">
+        <span style="font-weight:700;font-size:12px;display:flex;align-items:center;gap:6px;" data-i18n="sosEmergency">🚨 EMERGENCY ALERT</span>
+        <button class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:#fff;font-weight:700;" onclick="ackSOS()" data-i18n="acknowledge">Acknowledge</button>
+      </div>
+
+      <!-- Scrollable Main View Context -->
+      <main class="content-scroll" id="contentScroll">
+        <div class="view-transition-wrapper" id="gridContent">
+          <div class="dashboard-hero-card">
+            <div class="hero-profile-area">
+              <h2 data-i18n="initializingHub">Initializing Hub...</h2>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Bottom Nav Tab Bar -->
+      <nav class="mobile-nav">
+        <button class="mob-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">
+          <span class="material-symbols-rounded">grid_view</span><span data-i18n="home">Home</span>
+        </button>
+        <button class="mob-btn" data-tab="conversations" onclick="switchTab('conversations')">
+          <span class="material-symbols-rounded">forum</span><span data-i18n="chat">Chat</span>
+        </button>
+        <button class="mob-btn" data-tab="message" onclick="switchTab('message')">
+          <span class="material-symbols-rounded">chat_bubble</span><span data-i18n="send">Send</span>
+        </button>
+        <button class="mob-btn" data-tab="reminders" onclick="switchTab('reminders')">
+          <span class="material-symbols-rounded">alarm</span><span data-i18n="alerts">Alerts</span>
+        </button>
+        <button class="mob-btn" data-tab="report" onclick="switchTab('report')">
+          <span class="material-symbols-rounded">query_stats</span><span data-i18n="report">Report</span>
+        </button>
+      </nav>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CAREGIVER_STRINGS = {
+  en: {
+    dashboard: 'Dashboard', chatMonitor: 'Chat Monitor', sendMessage: 'Send Message', reminders: 'Reminders', healthReport: 'Health Report',
+    emotionalTelemetry: 'Emotional Telemetry', liveConversation: 'Live Conversation Stream', homeDevices: 'Home Devices',
+    sosEvents: 'SOS Events', sendVoiceMessage: 'Send Voice Message', broadcastMessage: 'Broadcast Message',
+    typeMessage: 'Type a custom message...', setReminder: 'Set Reminder', activeReminders: 'Active Reminders',
+    reminderMessage: 'Reminder message...', todaysOverview: "Today's Overview", emotionBreakdown: 'Emotion Breakdown',
+    aiModel: 'AI Model', fullConversationHistory: 'Full Conversation History', sentMessages: 'Sent Messages',
+    comingHome: 'Coming home', takeMedicine: 'Take medicine', iLoveYou: 'I love you', eatenToday: 'Eaten today?',
+    callingSoon: 'Calling soon', drinkWater: 'Drink water',
+    messageDelivered: 'Message delivered to AVIRA', failedToSend: 'Failed to send — check connection',
+    reminderSet: 'Reminder set!', noConversations: 'No conversations yet', noDevices: 'No devices',
+    noReminders: 'No active reminders', noMessages: 'No messages sent yet', noEmotionData: 'No emotion data today',
+    messageSpoken: 'Your message will be spoken aloud by AVIRA immediately.',
+    reminderSpoken: 'AVIRA will speak the reminder aloud at the scheduled time.',
+    systemLive: 'SYSTEM LIVE', offline: 'OFFLINE',
+    primaryCaregiver: 'Primary Caregiver', initializingHub: 'Initializing Hub...',
+    helloCaregiver: 'Hello, Caregiver', lastActive: 'Last active:', conversations: 'Conversations',
+    home: 'Home', chat: 'Chat', send: 'Send', alerts: 'Alerts', report: 'Report',
+    sosEmergency: '🚨 EMERGENCY ALERT — Immediate attention required!', acknowledge: 'Acknowledge',
+    sosAcknowledge: 'SOS acknowledged', reminderCancelled: 'Reminder cancelled', failedToCancel: 'Failed to cancel',
+    to: 'To', delivered: 'Delivered', pending: 'Pending', daily: 'Daily', once: 'Once',
+    pleaseFill: 'Please fill message and time',
+    msg1: 'I am coming home soon!', msg2: 'Time to take your medicine!', msg3: 'I love you, take care!',
+    msg4: 'Have you eaten today?', msg5: 'I will call you in 10 minutes', msg6: 'Please drink some water',
+    joy: 'Joy', love: 'Love', surprise: 'Surprise', neutral: 'Neutral', fear: 'Fear', sadness: 'Sadness', anger: 'Anger',
+    roleUser: 'User', roleCaregiver: 'Caregiver', roleReminder: 'Reminder', roleAvira: 'AVIRA',
+    emotionClassifier: '6-class emotion classifier · 267 MB'
+  },
+  hi: {
+    dashboard: 'डैशबोर्ड', chatMonitor: 'चैट मॉनिटर', sendMessage: 'संदेश भेजें', reminders: 'रिमाइंडर', healthReport: 'स्वास्थ्य रिपोर्ट',
+    emotionalTelemetry: 'भावनात्मक टेलीमेट्री', liveConversation: 'लाइव बातचीत स्ट्रीम', homeDevices: 'घरेलू उपकरण',
+    sosEvents: 'SOS घटनाएँ', sendVoiceMessage: 'आवाज़ संदेश भेजें', broadcastMessage: 'संदेश प्रसारित करें',
+    typeMessage: 'कस्टम संदेश टाइप करें...', setReminder: 'रिमाइंडर सेट करें', activeReminders: 'सक्रिय रिमाइंडर',
+    reminderMessage: 'रिमाइंडर संदेश...', todaysOverview: "आज का अवलोकन", emotionBreakdown: 'भावना विश्लेषण',
+    aiModel: 'AI मॉडल', fullConversationHistory: 'पूर्ण बातचीत इतिहास', sentMessages: 'भेजे गए संदेश',
+    comingHome: 'मैं घर आ रहा हूँ', takeMedicine: 'दवा खाने का समय!', iLoveYou: 'मैं तुमसे प्यार करता हूँ', eatenToday: 'क्या तुमने आज खाना खाया?',
+    callingSoon: 'मैं जल्द कॉल करूँगा', drinkWater: 'कृपया कुछ पानी पियें',
+    messageDelivered: 'AVIRA को संदेश दिया गया', failedToSend: 'भेजने में विफल — कनेक्शन जांचें',
+    reminderSet: 'रिमाइंडर सेट हो गया!', noConversations: 'अभी तक कोई बातचीत नहीं', noDevices: 'कोई उपकरण नहीं',
+    noReminders: 'कोई सक्रिय रिमाइंडर नहीं', noMessages: 'अभी तक कोई संदेश नहीं भेजा गया', noEmotionData: 'आज कोई भावना डेटा नहीं',
+    messageSpoken: 'आपका संदेश तुरंत AVIRA द्वारा बोला जाएगा।',
+    reminderSpoken: 'AVIRA निर्धारित समय पर रिमाइंडर बोलेगा।',
+    systemLive: 'सिस्टम चालू', offline: 'ऑफ़लाइन',
+    primaryCaregiver: 'प्राथमिक देखभालकर्ता', initializingHub: 'हब आरंभ हो रहा है...',
+    helloCaregiver: 'नमस्ते, देखभालकर्ता', lastActive: 'अंतिम सक्रिय:', conversations: 'बातचीत',
+    home: 'होम', chat: 'चैट', send: 'भेजें', alerts: 'अलर्ट', report: 'रिपोर्ट',
+    sosEmergency: '🚨 आपातकालीन अलर्ट — तुरंत ध्यान दें!', acknowledge: 'स्वीकार करें',
+    sosAcknowledge: 'SOS स्वीकार किया गया', reminderCancelled: 'रिमाइंडर रद्द किया गया', failedToCancel: 'रद्द करने में विफल',
+    to: 'के लिए', delivered: 'पहुंचाया गया', pending: 'लंबित', daily: 'दैनिक', once: 'एक बार',
+    pleaseFill: 'कृपया संदेश और समय भरें',
+    msg1: 'मैं घर आ रहा हूँ!', msg2: 'दवा खाने का समय!', msg3: 'मैं तुमसे प्यार करता हूँ!',
+    msg4: 'आज खाना खाया?', msg5: 'मैं जल्द कॉल करूँगा', msg6: 'कृपया पानी पियें',
+    joy: 'खुशी', love: 'प्यार', surprise: 'आश्चर्य', neutral: 'सामान्य', fear: 'डर', sadness: 'उदासी', anger: 'क्रोध',
+    roleUser: 'उपयोगकर्ता', roleCaregiver: 'देखभालकर्ता', roleReminder: 'रिमाइंडर', roleAvira: 'AVIRA',
+    emotionClassifier: '6-क्लास भावना क्लासिफायर · 267 MB'
+  },
+  mr: {
+    dashboard: 'डॅशबोर्ड', chatMonitor: 'चॅट मॉनिटर', sendMessage: 'संदेश पाठवा', reminders: 'रिमाइंडर', healthReport: 'आरोग्य अहवाल',
+    emotionalTelemetry: 'भावनात्मक टेलीमेट्री', liveConversation: 'थेट संभाषण प्रवाह', homeDevices: 'घरगुती उपकरणे',
+    sosEvents: 'SOS घटना', sendVoiceMessage: 'आवाज संदेश पाठवा', broadcastMessage: 'संदेश प्रसारित करा',
+    typeMessage: 'कस्टम संदेश टाइप करा...', setReminder: 'रिमाइंडर सेट करा', activeReminders: 'सक्रिय रिमाइंडर',
+    reminderMessage: 'रिमाइंडर संदेश...', todaysOverview: "आजचा आढावा", emotionBreakdown: 'भावना विश्लेषण',
+    aiModel: 'AI मॉडेल', fullConversationHistory: 'संपूर्ण संभाषण इतिहास', sentMessages: 'पाठवलेले संदेश',
+    comingHome: 'मी लवकरच घरी येत आहे!', takeMedicine: 'औषध घेण्याची वेळ!', iLoveYou: 'मी तुझ्यावर प्रेम करतो!', eatenToday: 'तू आज जेवला का?',
+    callingSoon: 'मी लवकरच कॉल करेन', drinkWater: 'कृपया थोडे पाणी प्या',
+    messageDelivered: 'AVIRA ला संदेश पोहोचला', failedToSend: 'पाठवणे अयशस्वी — कनेक्शन तपासा',
+    reminderSet: 'रिमाइंडर सेट झाला!', noConversations: 'अजून कोणतेही संभाषण नाही', noDevices: 'कोणतेही उपकरण नाही',
+    noReminders: 'कोणतेही सक्रिय रिमाइंडर नाही', noMessages: 'अजून कोणताही संदेश पाठवला नाही', noEmotionData: 'आज भावना डेटा नाही',
+    messageSpoken: 'तुमचा संदेश AVIRA लगेच बोलेल.',
+    reminderSpoken: 'AVIRA ठरलेल्या वेळी रिमाइंडर बोलेल.',
+    systemLive: 'सिस्टम चालू', offline: 'ऑफलाइन',
+    primaryCaregiver: 'प्राथमिक काळजीवाहक', initializingHub: 'हब सुरू होत आहे...',
+    helloCaregiver: 'नमस्कार, काळजीवाहक', lastActive: 'अंतिम सक्रिय:', conversations: 'संभाषणे',
+    home: 'मुख्य', chat: 'चॅट', send: 'पाठवा', alerts: 'अलर्ट', report: 'अहवाल',
+    sosEmergency: '🚨 आणीबाणी अलर्ट — त्वरित लक्ष द्या!', acknowledge: 'स्वीकारा',
+    sosAcknowledge: 'SOS स्वीकारला', reminderCancelled: 'रिमाइंडर रद्द झाला', failedToCancel: 'रद्द करणे अयशस्वी',
+    to: 'प्रति', delivered: 'पोहोचला', pending: 'प्रलंबित', daily: 'दररोज', once: 'एकदा',
+    pleaseFill: 'कृपया संदेश आणि वेळ भरा',
+    msg1: 'मी घरी येत आहे!', msg2: 'औषध घेण्याची वेळ!', msg3: 'मी तुझ्यावर प्रेम करतो!',
+    msg4: 'आज जेवला का?', msg5: 'मी लवकरच कॉल करेन', msg6: 'पाणी प्या',
+    joy: 'आनंद', love: 'प्रेम', surprise: 'आश्चर्य', neutral: 'सामान्य', fear: 'भीती', sadness: 'दुःख', anger: 'राग',
+    roleUser: 'वापरकर्ता', roleCaregiver: 'काळजीवाहक', roleReminder: 'रिमाइंडर', roleAvira: 'AVIRA',
+    emotionClassifier: '6-क्लास भावना क्लासिफायर · 267 MB'
+  }
+};
+
+let C_LANG = localStorage.getItem('caregiver_lang') || 'en';
+function t(k) { return CAREGIVER_STRINGS[C_LANG]?.[k] || CAREGIVER_STRINGS['en'][k] || k; }
+
+function updateStaticTexts() {
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.innerHTML = t(el.dataset.i18n); });
+  if (document.getElementById('msgInput')) document.getElementById('msgInput').placeholder = t('typeMessage');
+  if (document.getElementById('remText')) document.getElementById('remText').placeholder = t('reminderMessage');
+}
+
+function changeLang(l) {
+  C_LANG = l; localStorage.setItem('caregiver_lang', l);
+  updateStaticTexts();
+  renderTab(true);
+  poll();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const sel = document.getElementById('langSelect');
+  if(sel) sel.value = C_LANG;
+  updateStaticTexts();
+  startClock();
+});
+
+const API = window.location.origin;
+
+const EMOTIONS = {
+  joy: { emoji: '😊', label: 'Joy', color: '#10b981', bg: 'rgba(16, 185, 129, 0.15)', glow: 'rgba(16, 185, 129, 0.35)' },
+  love: { emoji: '🥰', label: 'Love', color: '#ec4899', bg: 'rgba(236, 72, 153, 0.15)', glow: 'rgba(236, 72, 153, 0.35)' },
+  surprise: { emoji: '😮', label: 'Surprise', color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.15)', glow: 'rgba(6, 182, 212, 0.35)' },
+  neutral: { emoji: '😐', label: 'Neutral', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.12)', glow: 'rgba(59, 130, 246, 0.25)' },
+  fear: { emoji: '😨', label: 'Fear', color: '#ea580c', bg: 'rgba(234, 88, 12, 0.15)', glow: 'rgba(234, 88, 12, 0.35)' },
+  sadness: { emoji: '😢', label: 'Sadness', color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.15)', glow: 'rgba(139, 92, 246, 0.35)' },
+  anger: { emoji: '😠', label: 'Anger', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.15)', glow: 'rgba(239, 68, 68, 0.35)' }
+};
+
+let dashData = {};
+let currentTab = 'dashboard';
+let chartInstance = null;
+
+// ═══ NAVIGATION ═══
+function switchTab(tab) {
+  if (currentTab !== tab) {
+    const scroller = document.getElementById('contentScroll');
+    if (scroller) window.lastScroll = scroller.scrollTop;
+    
+    currentTab = tab;
+    document.querySelectorAll('.mob-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    
+    if (scroller) scroller.scrollTop = 0; 
+    renderTab(true); 
+  }
+}
+
+// Clock Simulator
+function startClock() {
+  const timeEl = document.getElementById('mockTime');
+  if (!timeEl) return;
+  const update = () => {
+    const d = new Date();
+    timeEl.textContent = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
+  };
+  update();
+  setInterval(update, 60000);
+}
+
+// ═══ DYNAMIC ACCENTS ═══
+function updateAura(emo) {
+  const meta = EMOTIONS[emo] || EMOTIONS.neutral;
+  
+  // Update simulated smartphone frame shadows
+  const frame = document.getElementById('deviceFrame');
+  if (frame && window.innerWidth >= 768) {
+    frame.style.boxShadow = `0 24px 70px rgba(0, 0, 0, 0.8), 0 0 45px ${meta.glow}, 0 0 0 2px rgba(255, 255, 255, 0.05), inset 0 0 0 2px rgba(0, 0, 0, 0.4)`;
+    frame.style.borderColor = meta.color;
+  }
+  
+  // Set global accent colors
+  document.documentElement.style.setProperty('--accent', meta.color);
+  document.documentElement.style.setProperty('--accent-glow', meta.glow);
+  
+  // Update backgrounds of glowing visual blobs
+  const aurora1 = document.querySelector('.aurora-1');
+  if (aurora1) aurora1.style.background = meta.color;
+}
+
+// ═══ DATA FETCH ═══
+async function poll() {
+  try {
+    const res = await fetch(API + '/api/caregiver/dashboard');
+    if (!res.ok) throw 0;
+    const newData = await res.json();
+    const dataChanged = JSON.stringify(newData) !== JSON.stringify(dashData);
+    dashData = newData;
+    
+    // Update Connection badges
+    setConn(true);
+    
+    // Set user metadata on left side panels
+    const uName = dashData.user?.name || 'Ribhav';
+    if(document.getElementById('clientName')) document.getElementById('clientName').textContent = uName;
+    if(document.getElementById('userName')) document.getElementById('userName').textContent = uName + "'s Home";
+    
+    const sosBanner = document.getElementById('sosBanner');
+    if (sosBanner) sosBanner.classList.toggle('active', dashData.sos_active);
+    
+    // Trigger dynamic styling
+    updateAura(dashData.current_emotion || 'neutral');
+    
+    if (dataChanged) renderTab(false);
+    else updateDynamicStats(); 
+  } catch { setConn(false); }
+}
+
+function updateDynamicStats() {
+  document.querySelectorAll('[data-stat]').forEach(el => {
+    const key = el.dataset.stat;
+    let val = dashData[key] ?? 0;
+    if (key === 'alerts_today') val = dashData.stats?.alerts_today ?? 0;
+    if (key === 'reminders_count') val = dashData.reminders?.length ?? 0;
+    if (el.textContent !== String(val)) el.textContent = val;
+  });
+}
+
+function setConn(on) {
+  const dot = document.getElementById('connDot');
+  if (dot) {
+    dot.style.background = on ? 'var(--green)' : 'var(--red)';
+    dot.style.boxShadow = on ? '0 0 12px var(--green)' : '0 0 12px var(--red)';
+    dot.style.animation = on ? 'pulseGreen 2s infinite' : 'pulseRed 2s infinite';
+  }
+  
+  const lbl = document.getElementById('connLabel');
+  if (lbl) {
+    lbl.textContent = on ? t('systemLive') : t('offline');
+    lbl.style.background = on ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)';
+    lbl.style.color = on ? 'var(--green)' : 'var(--red)';
+  }
+  
+  // Sync desktop side text
+  const stateLabel = document.getElementById('sysStateLabel');
+  if (stateLabel) {
+    stateLabel.textContent = on ? 'ONLINE' : 'OFFLINE';
+    stateLabel.style.color = on ? 'var(--green)' : 'var(--red)';
+  }
+}
+
+// ═══ RENDER ENGINE ═══
+function renderTab(fullRedraw = true) {
+  const g = document.getElementById('gridContent');
+  if (!g) return;
+  
+  if (currentTab === 'dashboard') {
+    if (fullRedraw || !g.querySelector('#telemetryChart')) {
+      renderDashboard(g);
+    } else {
+      buildDevices();
+      buildDashChat();
+    }
+  }
+  else if (currentTab === 'conversations') renderConversations(g);
+  else if (currentTab === 'message') renderMessage(g);
+  else if (currentTab === 'reminders') renderReminders(g);
+  else if (currentTab === 'report') renderReport(g);
+}
+
+// ── DASHBOARD ──
+function renderDashboard(g) {
+  const emo = dashData.current_emotion || 'neutral';
+  const meta = EMOTIONS[emo] || EMOTIONS.neutral;
+  g.className = 'view-transition-wrapper';
+  g.innerHTML = `
+    <div class="dashboard-hero-card">
+      <div class="hero-bg-glow" style="background:${meta.color}"></div>
+      <div class="hero-profile-area">
+        <div class="profile-avatar-glow" style="border-color:${meta.color}">
+          <div class="profile-avatar-initials">${dashData.user?.name ? dashData.user.name[0] : 'R'}</div>
+          <div class="dynamic-emoji-badge">${meta.emoji}</div>
+        </div>
+        <div class="profile-details">
+          <h2>${dashData.user?.name || 'Ribhav'}</h2>
+          <p class="last-active">${t('lastActive')} ${fmtTime(dashData.last_active)}</p>
+          <div class="emotion-tag" style="background:${meta.bg};color:${meta.color}">
+            <span class="pulse-dot" style="background:${meta.color}"></span>
+            ${t(emo) || emo}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card" onclick="switchTab('conversations')">
+        <div class="stat-val" style="color:var(--blue)" data-stat="conversations_today">${dashData.conversations_today||0}</div>
+        <div class="stat-label">${t('conversations')}</div>
+      </div>
+      <div class="stat-card" onclick="switchTab('report')">
+        <div class="stat-val" style="color:var(--red)" data-stat="alerts_today">${dashData.stats?.alerts_today||0}</div>
+        <div class="stat-label">${t('sosEvents')}</div>
+      </div>
+      <div class="stat-card" onclick="switchTab('reminders')">
+        <div class="stat-val" style="color:var(--green)" data-stat="reminders_count">${dashData.reminders?.length||0}</div>
+        <div class="stat-label">${t('reminders')}</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">${t('emotionalTelemetry')}</div>
+      <div class="chart-legend">
+        <span style="border-left: 2px solid #10b981; padding-left: 4px">${t('joy')}</span>
+        <span style="border-left: 2px solid #ec4899; padding-left: 4px">${t('love')}</span>
+        <span style="border-left: 2px solid #06b6d4; padding-left: 4px">${t('surprise')}</span>
+        <span style="border-left: 2px solid #3b82f6; padding-left: 4px">${t('neutral')}</span>
+        <span style="border-left: 2px solid #ea580c; padding-left: 4px">${t('fear')}</span>
+        <span style="border-left: 2px solid #8b5cf6; padding-left: 4px">${t('sadness')}</span>
+        <span style="border-left: 2px solid #ef4444; padding-left: 4px">${t('anger')}</span>
+      </div>
+      <div class="chart-wrap"><canvas id="telemetryChart"></canvas></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">${t('homeDevices')}</div>
+      <div class="device-grid" id="devGrid"></div>
+    </div>
+
+    <div class="card chat-widget-card" onclick="switchTab('conversations')">
+      <div class="card-header-row">
+        <div class="card-title">${t('liveConversation')}</div>
+        <span class="material-symbols-rounded text-link">chevron_right</span>
+      </div>
+      <div class="chat-feed" id="dashChat"></div>
+    </div>
+  `;
+  buildChart();
+  buildDevices();
+  buildDashChat();
+}
+
+function buildChart() {
+  const ctx = document.getElementById('telemetryChart')?.getContext('2d');
+  if (!ctx) return;
+  const h = dashData.emotion_history || [];
+  if (!h.length) return;
+  const labels = h.map(e => new Date(e.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
+  const emoVal = {joy:9,love:10,surprise:7,neutral:5,fear:3,sadness:2,anger:1};
+  const emoPointColor = {joy:'#10b981',love:'#ec4899',surprise:'#06b6d4',neutral:'#3b82f6',fear:'#ea580c',sadness:'#8b5cf6',anger:'#ef4444'};
+  const data = h.map(e => emoVal[e.emotion] ?? 5);
+  const colors = h.map(e => emoPointColor[e.emotion] ?? '#3b82f6');
+
+  const grad = ctx.createLinearGradient(0, 0, 0, 200);
+  grad.addColorStop(0, 'rgba(79, 70, 229, 0.25)');
+  grad.addColorStop(0.6, 'rgba(79, 70, 229, 0.05)');
+  grad.addColorStop(1, 'rgba(79, 70, 229, 0.0)');
+
+  if (chartInstance) chartInstance.destroy();
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets: [{
+      label: 'Emotion Tracker',
+      data,
+      borderColor: 'rgba(79, 70, 229, 0.8)',
+      backgroundColor: grad,
+      fill: { target: 'origin' },
+      tension: 0.4,
+      pointRadius: 4,
+      pointHoverRadius: 6,
+      pointBackgroundColor: colors,
+      pointBorderColor: colors,
+      borderWidth: 2
+    }]},
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(13,15,22,0.95)', borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1,
+          titleFont: { size: 10, family: 'Plus Jakarta Sans' }, bodyFont: { size: 11, family: 'Plus Jakarta Sans' },
+          padding: 8, cornerRadius: 8, displayColors: false,
+          callbacks: {
+            title: (items) => items[0]?.label || '',
+            label: (item) => {
+              const emo = h[item.dataIndex]?.emotion || 'neutral';
+              const name = EMOTIONS[emo]?.label || emo;
+              return `${name} — Intensity ${item.raw}/10`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255,255,255,0.02)', drawTicks: false },
+          ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 8, family: 'Plus Jakarta Sans' }, maxRotation: 0, padding: 6 },
+          border: { display: false }
+        },
+        y: {
+          min: 0, max: 11,
+          grid: { color: 'rgba(255,255,255,0.02)', drawTicks: false },
+          ticks: {
+            color: 'rgba(255,255,255,0.2)', font: { size: 8, family: 'Plus Jakarta Sans' }, padding: 6, stepSize: 3,
+            callback: v => v === 0 ? '' : v <= 2 ? 'Low' : v <= 5 ? 'Calm' : v <= 8 ? 'Good' : 'High'
+          },
+          border: { display: false }
+        }
+      }
+    }
+  });
+}
+
+function buildDevices() {
+  const grid = document.getElementById('devGrid');
+  if(!grid) return;
+  const icons = {light:'lightbulb',fan:'mode_fan',tv:'tv',lock:'lock',sensor:'sensor_window'};
+  let devs = dashData.devices || {};
+  if (!Array.isArray(devs)) devs = Object.values(devs);
+  if (!devs.length) { grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="empty-text">${t('noDevices')}</div></div>`; return; }
+  
+  grid.innerHTML = devs.map(d => {
+    const isStateOn = d.state === true || d.state === 'true' || d.state === 1 || String(d.state).toLowerCase() === 'on';
+    return `
+      <div class="device-card ${isStateOn ? 'on' : ''}" onclick="toggleDeviceState('${d.id}', ${isStateOn})">
+        <div class="device-icon-wrap">
+          <span class="material-symbols-rounded">${d.icon || icons[d.type] || 'devices'}</span>
+        </div>
+        <div class="device-info">
+          <div class="device-name">${d.name}</div>
+          <div class="device-room">${d.room || ''}</div>
+        </div>
+        <div class="device-switch">
+          <div class="switch-handle"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function toggleDeviceState(id, currentState) {
+  const cardEl = document.querySelector(`.device-card[onclick*="${id}"]`);
+  if (cardEl) {
+    const nextState = !currentState;
+    cardEl.classList.toggle('on', nextState);
+    cardEl.setAttribute('onclick', `toggleDeviceState('${id}', ${nextState})`);
+  }
+  try {
+    const res = await fetch(`${API}/api/devices/${id}/toggle`, { method: 'POST' });
+    if (!res.ok) throw 0;
+    toast(t('deviceUpdated') || 'Device toggled successfully');
+    poll();
+  } catch {
+    toast(t('failedToUpdate') || 'Failed to update device state');
+    poll();
+  }
+}
+
+function buildDashChat() {
+  const feed = document.getElementById('dashChat');
+  if(!feed) return;
+  fetch(API+'/api/caregiver/conversations?limit=4').then(r=>r.json()).then(msgs=>{
+    if(!msgs.length){ feed.innerHTML=`<div class="empty"><div class="empty-text">${t('noConversations')}</div></div>`; return; }
+    feed.innerHTML = msgs.map(m=>{
+      const cls = m.role==='user'?'user':m.role==='caregiver'?'caregiver':m.role==='reminder'?'reminder':'assistant';
+      const label = m.role==='user'?t('roleUser'):m.role==='caregiver'?t('roleCaregiver'):m.role==='reminder'?t('roleReminder'):t('roleAvira');
+      const emo = m.emotion_detected;
+      const emoMeta = EMOTIONS[emo];
+      const emoH = emo&&emo!=='neutral'&&emoMeta?`<span class="msg-emotion" style="background:${emoMeta.bg};color:${emoMeta.color}">${t(emo)||emo}</span>`:'';
+      return `
+        <div class="msg ${cls}">
+          <div class="msg-role">${label}</div>
+          <div>${m.text}</div>
+          ${emoH}
+          <div class="msg-time">${fmtTime(m.timestamp)}</div>
+        </div>`;
+    }).join('');
+    feed.scrollTop = feed.scrollHeight;
+  }).catch(()=>{});
+}
+
+// ── CONVERSATIONS VIEW ──
+function renderConversations(g) {
+  g.className = 'view-transition-wrapper';
+  g.innerHTML = `
+    <div class="card" style="padding:16px;">
+      <div class="card-title">${t('fullConversationHistory')}</div>
+      <div class="chat-feed" id="fullChat" style="max-height:calc(100vh - 200px); padding-bottom: 24px;"></div>
+    </div>
+  `;
+  fetch(API+'/api/caregiver/conversations?limit=40').then(r=>r.json()).then(msgs=>{
+    const feed = document.getElementById('fullChat');
+    if(!feed) return;
+    if(!msgs.length){ feed.innerHTML=`<div class="empty"><div class="material-symbols-rounded empty-icon">forum</div><div class="empty-text">${t('noConversations')}</div></div>`; return; }
+    feed.innerHTML = msgs.map(m=>{
+      const cls = m.role==='user'?'user':m.role==='caregiver'?'caregiver':m.role==='reminder'?'reminder':'assistant';
+      const label = m.role==='user'?t('roleUser'):m.role==='caregiver'?t('roleCaregiver'):m.role==='reminder'?t('roleReminder'):t('roleAvira');
+      const emo = m.emotion_detected;
+      const emoMeta = EMOTIONS[emo];
+      const emoH = emo&&emo!=='neutral'&&emoMeta?`<div class="msg-emotion" style="background:${emoMeta.bg};color:${emoMeta.color}">${t(emo)||emo}</div>`:'';
+      return `
+        <div class="msg ${cls}">
+          <div class="msg-role">${label}</div>
+          <div>${m.text}</div>
+          ${emoH}
+          <div class="msg-time">${fmtTime(m.timestamp)}</div>
+        </div>`;
+    }).join('');
+    feed.scrollTop = feed.scrollHeight;
+  }).catch(()=>{});
+}
+
+// ── SEND MESSAGE VIEW ──
+function renderMessage(g) {
+  g.className = 'view-transition-wrapper';
+  g.innerHTML = `
+    <div class="card">
+      <div class="card-title">${t('sendVoiceMessage')}</div>
+      <p style="font-size:12px;color:var(--text3);margin-bottom:16px">${t('messageSpoken')}</p>
+      
+      <div class="quick-grid">
+        <button class="quick-pill" onclick="quickMsg(t('msg1'))">${t('comingHome')}</button>
+        <button class="quick-pill" onclick="quickMsg(t('msg2'))">${t('takeMedicine')}</button>
+        <button class="quick-pill" onclick="quickMsg(t('msg3'))">${t('iLoveYou')}</button>
+        <button class="quick-pill" onclick="quickMsg(t('msg4'))">${t('eatenToday')}</button>
+        <button class="quick-pill" onclick="quickMsg(t('msg5'))">${t('callingSoon')}</button>
+        <button class="quick-pill" onclick="quickMsg(t('msg6'))">${t('drinkWater')}</button>
+      </div>
+      
+      <div class="input-group">
+        <div class="input-wrap">
+          <input type="text" id="msgInput" placeholder="${t('typeMessage')}" autocomplete="off">
+        </div>
+      </div>
+      
+      <button class="btn btn-primary" style="width:100%" onclick="sendMsg()" id="broadcastBtn">
+        <span class="material-symbols-rounded">campaign</span> ${t('broadcastMessage')}
+      </button>
+    </div>
+    
+    <div class="card">
+      <div class="card-title">${t('sentMessages')}</div>
+      <div id="sentList" style="max-height: 250px; overflow-y: auto;"></div>
+    </div>
+  `;
+  loadSent();
+  document.getElementById('msgInput').addEventListener('keydown', e=>{ if(e.key==='Enter') sendMsg(); });
+}
+
+function quickMsg(txt) { 
+  document.getElementById('msgInput').value = txt; 
+  sendMsg(); 
+}
+
+async function sendMsg() {
+  const inp = document.getElementById('msgInput');
+  const txt = inp.value.trim(); if(!txt) return; inp.value='';
+  try {
+    await fetch(API+'/api/caregiver/send-message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:txt,from:'Caregiver'})});
+    toast(t('messageDelivered'));
+    loadSent();
+  } catch { toast(t('failedToSend')); }
+}
+
+async function loadSent() {
+  try {
+    const res = await fetch(API+'/api/caregiver/sent-messages');
+    const data = await res.json();
+    const list = document.getElementById('sentList');
+    if(!list) return;
+    if(!data.length){ list.innerHTML=`<div class="empty"><div class="material-symbols-rounded empty-icon">mail</div><div class="empty-text">${t('noMessages')}</div></div>`; return; }
+    list.innerHTML = data.slice().reverse().map(m=>`
+      <div class="msg caregiver" style="margin-bottom: 10px; width: 100%; max-width: 100%;">
+        <div class="msg-role">${t('to')} ${dashData?.user?.name||'User'}</div>
+        <div>${m.text}</div>
+        <div class="msg-time">${m.delivered?t('delivered'):t('pending')} · ${fmtTime(m.timestamp)}</div>
+      </div>`).join('');
+  } catch {}
+}
+
+// ── REMINDERS VIEW ──
+function renderReminders(g) {
+  g.className = 'view-transition-wrapper';
+  g.innerHTML = `
+    <div class="card">
+      <div class="card-title">${t('setReminder')}</div>
+      <p style="font-size:12px;color:var(--text3);margin-bottom:16px">${t('reminderSpoken')}</p>
+      
+      <div class="input-group">
+        <div class="input-wrap">
+          <input type="text" id="remText" placeholder="${t('reminderMessage')}">
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <div class="input-wrap">
+          <input type="time" id="remTime" style="flex:1">
+          <select id="remRepeat" style="flex:0.6;color:var(--text); background: rgba(0,0,0,0.25);">
+            <option value="once">${t('once')}</option>
+            <option value="daily">${t('daily')}</option>
+          </select>
+        </div>
+      </div>
+      
+      <button class="btn btn-primary" style="width:100%;margin-bottom:12px" onclick="addRem()">
+        <span class="material-symbols-rounded">alarm_add</span> ${t('setReminder')}
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">${t('activeReminders')}</div>
+      <div id="remList"></div>
+    </div>
+  `;
+  loadRems();
+  document.getElementById('remText').addEventListener('keydown', e=>{ if(e.key==='Enter') addRem(); });
+}
+
+async function addRem() {
+  const txt = document.getElementById('remText').value.trim();
+  const time = document.getElementById('remTime').value;
+  const rep = document.getElementById('remRepeat').value;
+  if(!txt||!time){ toast(t('pleaseFill')); return; }
+  try {
+    await fetch(API+'/api/caregiver/set-reminder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:txt,time,repeat:rep})});
+    document.getElementById('remText').value='';
+    toast(t('reminderSet')); loadRems(); poll();
+  } catch { toast(t('failedToSend')); }
+}
+
+async function loadRems() {
+  try {
+    const res = await fetch(API+'/api/caregiver/reminders');
+    const data = await res.json();
+    const list = document.getElementById('remList');
+    if(!list) return;
+    const active = data.filter(r=>r.active);
+    if(!active.length){ list.innerHTML=`<div class="empty"><div class="material-symbols-rounded empty-icon">notifications_off</div><div class="empty-text">${t('noReminders')}</div></div>`; return; }
+    list.innerHTML = active.map(r=>`
+      <div class="rem-item">
+        <div class="rem-time">${r.time}</div>
+        <div class="rem-info">
+          <div class="rem-text">${r.text}</div>
+          <span class="rem-repeat">${r.repeat==='daily'?t('daily'):t('once')}</span>
+        </div>
+        <button class="rem-del" onclick="delRem('${r.id}')">
+          <span class="material-symbols-rounded" style="font-size:16px;">delete</span>
+        </button>
+      </div>`).join('');
+  } catch {}
+}
+
+async function delRem(id) {
+  try {
+    await fetch(API+'/api/caregiver/delete-reminder',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
+    toast(t('reminderCancelled')); loadRems(); poll();
+  } catch { toast(t('failedToCancel')); }
+}
+
+// ── REPORT VIEW ──
+function renderReport(g) {
+  g.className = 'view-transition-wrapper';
+  const d = dashData;
+  const counts = d.emotion_counts || {};
+  const total = Object.values(counts).reduce((a,b)=>a+b,0) || 1;
+  const emoKeyMap = {joy:'joy',love:'love',surprise:'surprise',neutral:'neutral',fear:'fear',sadness:'sadness',anger:'anger'}
+  g.innerHTML = `
+    <div class="card" style="text-align:center;padding:24px">
+      <div class="material-symbols-rounded" style="font-size:40px;margin-bottom:8px;color:var(--accent);">query_stats</div>
+      <div style="font-size:18px;font-weight:700;font-family:'Space Grotesk',sans-serif">${t('todaysOverview')}</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:4px">${new Date().toLocaleDateString(C_LANG==='hi'?'hi-IN':C_LANG==='mr'?'mr-IN':'en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</div>
+    </div>
+    
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-val" style="color:var(--blue)">${d.conversations_today||0}</div>
+        <div class="stat-label">${t('conversations')}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" style="color:var(--red)">${d.stats?.alerts_today||0}</div>
+        <div class="stat-label">${t('sosEvents')}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" style="color:var(--green)">${d.reminders?.length||0}</div>
+        <div class="stat-label">${t('reminders')}</div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-title">${t('emotionBreakdown')}</div>
+      <div id="emoBreakdown">
+        ${!Object.keys(counts).length?`<div class="empty"><div class="empty-text">${t('noEmotionData')}</div></div>`:
+          Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([em,c])=>{
+            const pct = Math.round(c/total*100);
+            const emoMeta = EMOTIONS[em] || EMOTIONS.neutral;
+            return `
+              <div class="progress-row">
+                <div class="progress-info">
+                  <span>${emoMeta.emoji} ${t(emoKeyMap[em]||em)||em}</span>
+                  <span style="color:var(--text3)">${pct}% (${c})</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-bar-fill" style="width:${pct}%;background:${emoMeta.color}"></div>
+                </div>
+              </div>`;
+          }).join('')
+        }
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-title">${t('aiModel')}</div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="width:44px;height:44px;border-radius:12px;background:rgba(79,70,229,0.15);display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:24px">
+          <span class="material-symbols-rounded">psychology</span>
+        </div>
+        <div>
+          <div style="font-size:14px;font-weight:700">DistilBERT</div>
+          <div style="font-size:11px;color:var(--text3)">${t('emotionClassifier')}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ── UTILITIES ──
+function ackSOS() { 
+  fetch(`${API}/api/sos/cancel`, { method: 'POST' }).then(() => {
+    const banner = document.getElementById('sosBanner');
+    if (banner) banner.classList.remove('active'); 
+    toast(t('sosAcknowledge')); 
+    poll();
+  }).catch(() => {
+    toast(t('failedToCancel') || 'Failed to cancel SOS');
+  });
+}
+
+function fmtTime(iso) {
+  if(!iso) return '—';
+  try { 
+    const loc = C_LANG === 'hi' ? 'hi-IN' : C_LANG === 'mr' ? 'mr-IN' : 'en-US';
+    const d=new Date(iso); 
+    return d.toLocaleTimeString([loc],{hour:'2-digit',minute:'2-digit'})+' · '+d.toLocaleDateString([loc],{month:'short',day:'numeric'}); 
+  } catch { return iso; }
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  if(!t) return;
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// ── INIT ──
+poll();
+setInterval(poll, 4000); // Polling every 4 seconds for immediate state response
+
+if ('serviceWorker' in navigator) { 
+  navigator.serviceWorker.register('/caregiver/sw.js').catch(()=>{}); 
+}
+</script>
+</body>
+</html>
